@@ -2,12 +2,19 @@ import React from 'react';
 import styled from 'styled-components';
 import { auth, provider } from '../firebase';
 import { signInWithPopup } from "firebase/auth";
+import { useDispatch, useSelector } from 'react-redux';
+import { setUser } from '../features/user/userSlice';
 
 function Header() {
 
+    const dispatch = useDispatch();
+
     const handleAuth = () => {
         signInWithPopup(auth, provider)
-            .then((result) => console.log(result))
+            .then((result) => {
+                dispatch(setUser(result.user))
+                console.log(result.user);
+            })
             .catch((err) => console.error(err.message));
     }
 
