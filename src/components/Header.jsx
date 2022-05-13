@@ -1,21 +1,51 @@
 import React from 'react';
 import styled from 'styled-components';
 import { auth, provider } from '../firebase';
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signOut, getAuth } from "firebase/auth";
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser } from '../features/user/userSlice';
+import { setUser, setSignOut } from '../features/user/userSlice';
+import { useNavigate } from 'react-router-dom';
 
 function Header() {
 
     const dispatch = useDispatch();
+    const user = useSelector(store => store.user)
+    const navigate = useNavigate()
+
+    React.useEffect(() => {
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                setUserData(user)
+                navigate("/home")
+            }
+        })
+    }, [user.name])
 
     const handleAuth = () => {
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                dispatch(setUser(result.user))
-                console.log(result.user);
-            })
-            .catch((err) => console.error(err.message));
+        if (!user.name) {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    dispatch(setUserData(result.user))
+                })
+                .catch((err) => console.error(err.message));
+        } else if (user.name) {
+            const auth = getAuth();
+
+            signOut(auth)
+                .then(() => {
+                    dispatch(setSignOut())
+                    navigate("/")
+                })
+                .catch((err) => console.error(err.message));
+        }
+    }
+
+    const setUserData = (user) => {
+        dispatch(setUser({
+            name: user.displayName,
+            email: user.email,
+            photo: user.photoURL,
+        }))
     }
 
     return (
@@ -23,15 +53,26 @@ function Header() {
             <Logo>
                 <img src="/images/logo.svg" alt="Disney+" />
             </Logo>
-            <NavMenu>
-                <a>HOME</a>
-                <a>SEARCH</a>
-                <a>WATCHLIST</a>
-                <a>ORIGINALS</a>
-                <a>MOVIES</a>
-                <a>SERIES</a>
-            </NavMenu>
-            <Login onClick={handleAuth}>LOGIN</Login>
+            {
+                !user.name ?
+                    <Login onClick={handleAuth}>LOGIN</Login>
+                    : <>
+                        <NavMenu>
+                            <a>HOME</a>
+                            <a>SEARCH</a>
+                            <a>WATCHLIST</a>
+                            <a>ORIGINALS</a>
+                            <a>MOVIES</a>
+                            <a>SERIES</a>
+                        </NavMenu>
+                        <SignOut>
+                            <UserImg src={user.photo} alt={user.name} />
+                            <DropDown>
+                                <span onClick={handleAuth}>SIGN OUT</span>
+                            </DropDown>
+                        </SignOut>
+                    </>
+            }
         </Nav>
     )
 }
@@ -88,7 +129,6 @@ const NavMenu = styled.div`
         white-space: nowrap;
         position: relative;
         cursor: pointer;
-
         &:before {
             content: "";
             background-color: rgb(249, 249, 249);
@@ -113,7 +153,6 @@ const NavMenu = styled.div`
             }
         }
     }
-
     @media (max-width: 768px) {
         display: none;
     }
@@ -133,6 +172,42 @@ const Login = styled.a`
         background-color: #f9f9f9;
         color: #000;
         border-color: transparent;
+    }
+`;
+
+const UserImg = styled.img`
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+`;
+
+const DropDown = styled.div`
+    position: absolute;
+    top: 48px;
+    right: 0px;
+    background: rgb(19, 19, 19);
+    border: 1px solid rgba(151, 151, 151, 0.34);
+    border-radius: 4px;
+    box-shadow: rgb(0 0 0 / 50%) 0px 0px 18px 0px;
+    padding: 10px;
+    font-size: 14px;
+    letter-spacing: 3px;
+    opacity: 0;
+`;
+
+const SignOut = styled.div`
+    position: relative;
+    height: 48px;
+    width: 49px;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+
+    &:hover{
+        ${DropDown}{
+            opacity: 1;
+        }
     }
 `;
 
