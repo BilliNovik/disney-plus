@@ -5,6 +5,7 @@ import { signInWithPopup, signOut, getAuth } from "firebase/auth";
 import { useDispatch, useSelector } from 'react-redux';
 import { setUser, setSignOut } from '../features/user/userSlice';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 function Header() {
 
@@ -51,14 +52,16 @@ function Header() {
     return (
         <Nav>
             <Logo>
-                <img src="/images/logo.svg" alt="Disney+" />
+                <Link to='/home'>
+                    <img src="/images/logo.svg" alt="Disney+" />
+                </Link>
             </Logo>
             {
                 !user.name ?
                     <Login onClick={handleAuth}>LOGIN</Login>
                     : <>
                         <NavMenu>
-                            <a>HOME</a>
+                            <Link to='/home'>HOME</Link>
                             <a>SEARCH</a>
                             <a>WATCHLIST</a>
                             <a>ORIGINALS</a>
@@ -92,7 +95,7 @@ const Nav = styled.nav`
   z-index: 2;
 `;
 
-const Logo = styled.a`
+const Logo = styled.div`
   padding: 0;
   width: 80px;
   margin-bottom: 4px;
